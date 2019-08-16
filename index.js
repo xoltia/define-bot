@@ -10,6 +10,7 @@ db.run('CREATE TABLE IF NOT EXISTS Words (word TEXT PRIMARY KEY, definition TEXT
 const API_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/";
 const MERRIAM_BASE = "https://www.merriam-webster.com/dictionary/";
 const SET_REGEX = /^(\S+)\s\bmeans\b\s(.+)$/i;
+const GET_REGEX = /^\bdefine\b:?\s?(\S+)$/i;
 
 function buildCustomEmbed(entry) {
     const embed = new Discord.RichEmbed();
@@ -17,12 +18,12 @@ function buildCustomEmbed(entry) {
     embed.description = entry.definition;
     if (submitter) {
         embed.author = {
-            name: submitter.username,
+            name: `Submitted by ${submitter.tag}`,
             icon_url: submitter.avatarURL,
         };
     } else {
         embed.author = {
-            name: 'Unknown'
+            text: 'Submitted by unknown user.'
         }
     }
     return embed;
@@ -52,8 +53,8 @@ function getDefinitionEmbed(word) {
 }
 
 client.on('message', message => {
-    if (message.content.toLowerCase().startsWith('define')) {
-        const word = message.content.substr(6).trim().split(" ")[0];
+    if (GET_REGEX.test(message.content)) {
+        const word = GET_REGEX.exec(message.content)[1];
         if (word) {
             db.get('SELECT definition, submitterId FROM Words WHERE word = ?', word, (err, row) => {
                 if (err) return console.log(err);
@@ -77,17 +78,17 @@ client.on('message', message => {
             });
         }
     } else if (SET_REGEX.test(message.content)) {
-        const groups = SET_REGEX.exec(message.content);
-        db.get('SELECT * FROM Words WHERE Word = ?', groups[1], (err, row) => {
+        const match = SET_REGEX.exec(message.content);
+        db.get('SELECT * FROM Words WHERE Word = ?', match[1], (err, row) => {
             if (err) return console.log(err);
             if (row) {
-                db.run('UPDATE Words SET definition = ?, submitterId = ? WHERE word = ?', groups[2], message.author.id, groups[1],
+                db.run('UPDATE Words SET definition = ?, submitterId = ? WHERE word = ?', match[2], message.author.id, match[1],
                 (result, err) => {
                     if (err) return console.log(err);
                     message.react("✅");
                 });
             } else {
-                db.run('INSERT INTO Words (word, definition, submitterId) VALUES (?, ?, ?)', groups[1], groups[2], message.author.id,
+                db.run('INSERT INTO Words (word, definition, submitterId) VALUES (?, ?, ?)', match[1], match[2], message.author.id,
                 (result, err) => {
                     if (err) return console.log(err);
                     message.react("✅");
