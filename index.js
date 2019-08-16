@@ -81,7 +81,7 @@ client.on('message', message => {
         db.get('SELECT * FROM Words WHERE Word = ?', groups[1], (err, row) => {
             if (err) return console.log(err);
             if (row) {
-                db.run('UPDATE Words SET definition = ? AND submitterId = ? WHERE word = ?', groups[2], message.author.id, groups[1],
+                db.run('UPDATE Words SET definition = ?, submitterId = ? WHERE word = ?', groups[2], message.author.id, groups[1],
                 (result, err) => {
                     if (err) return console.log(err);
                     message.react("✅");
