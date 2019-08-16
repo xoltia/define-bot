@@ -32,9 +32,12 @@ function buildEmbed(word, data) {
     const embed = new Discord.RichEmbed()
         .setTitle(word)
         .setURL(MERRIAM_BASE + word);
-    if (data.length == 0) {
+    
+    // Empty response or array consists of suggestions
+    if (data.length === 0 || typeof data[0] === "string") {
         embed.color = 0xff0000;
         embed.description = "No definitions.";
+        return embed;
     }
     for (let result of data) {
         embed.addField(result.fl, result.shortdef.map((def, index) => `${index+1}. ${def}`).join('\n'));
@@ -57,7 +60,7 @@ client.on('message', message => {
                 if (row) {
                     message.channel.send(buildCustomEmbed(row)).then(msg => {
                         msg.react("📖");
-                        msg.awaitReactions((r, u) => r.emoji.name === "📖" && u.id === message.author.id, { time: 15000 })
+                        msg.awaitReactions((r, u) => r.emoji.name === "📖" && u.id === message.author.id, { time: 15000, max: 1 })
                             .then(reactions => reactions.array().length > 0 ? getDefinitionEmbed(word) : null)
                             .then(embed => {
                                 if (!embed) {
@@ -75,7 +78,7 @@ client.on('message', message => {
         }
     } else if (SET_REGEX.test(message.content)) {
         const groups = SET_REGEX.exec(message.content);
-        db.get('SELECT * FROM Words', (err, row) => {
+        db.get('SELECT * FROM Words WHERE Word = ?', groups[1], (err, row) => {
             if (err) return console.log(err);
             if (row) {
                 db.run('UPDATE Words SET definition = ? AND submitterId = ? WHERE word = ?', groups[2], message.author.id, groups[1],
