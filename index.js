@@ -9,7 +9,7 @@ db.run('CREATE TABLE IF NOT EXISTS Words (word TEXT PRIMARY KEY, definition TEXT
 
 const API_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/";
 const MERRIAM_BASE = "https://www.merriam-webster.com/dictionary/";
-const SET_REGEX = /^(\S+)\s\bmeans\b\s(.+)$/i;
+const SET_REGEX = /^(\S+)\smeans\s(.+)$/i;
 const GET_REGEX = /^\bdefine\b:?\s?(\S+)$/i;
 
 function buildCustomEmbed(entry) {
