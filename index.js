@@ -14,6 +14,7 @@ const GET_REGEX = /^\bdefine\b:?\s?(\S+)$/i;
 
 function buildCustomEmbed(entry) {
     const embed = new Discord.RichEmbed();
+    // TODO: fetch if not cached
     const submitter = client.users.get(entry.submitterId);
     embed.description = entry.definition;
     if (submitter) {
@@ -23,7 +24,7 @@ function buildCustomEmbed(entry) {
         };
     } else {
         embed.author = {
-            text: 'Submitted by unknown user.'
+            name: 'Submitted by unknown user.'
         }
     }
     return embed;
@@ -62,7 +63,7 @@ client.on('message', message => {
                     message.channel.send(buildCustomEmbed(row)).then(msg => {
                         msg.react("📖");
                         msg.awaitReactions((r, u) => r.emoji.name === "📖" && u.id === message.author.id, { time: 15000, max: 1 })
-                            .then(reactions => reactions.array().length > 0 ? getDefinitionEmbed(word) : null)
+                            .then(reactions => reactions.size > 0 ? getDefinitionEmbed(word) : null)
                             .then(embed => {
                                 if (!embed) {
                                     msg.clearReactions();
